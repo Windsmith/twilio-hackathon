@@ -1,11 +1,12 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const path = require('path');
 
 const app = express();
 app.use(bodyParser.urlencoded({extended:true}));
 
 app.get('/', (request, response) => {
-    response.send('Hello World');
+    response.sendFile(path.join(__dirname, './index.html'));
 })
 
 app.post('/mypage', (request, response) => {
