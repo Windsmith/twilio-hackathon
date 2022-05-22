@@ -6,7 +6,7 @@ const app = express();
 app.use(bodyParser.urlencoded({extended:true}));
 
 app.get('/', (request, response) => {
-    response.sendFile(path.join(__dirname, './index.html'));
+    response.sendFile(path.join(__dirname + "/../", './index.html'));
 })
 
 const messageStates = {
@@ -16,7 +16,7 @@ const messageStates = {
     2.1: "Hmm, alright. I am searching my resources to find you a professional. In the meanwhile, I will help you run a basic analogy to provide you better help.\n\n Turn off the engine and let the car cool down for around 10-15 minutes.\n\nLooking at the gauges, what are you having trouble with?\n1. Engine temperature\n2. Transmission temperature",
     2.11: "After you’ve allowed the car to cool down,\n1. pull up the bonnet cautiously \n2. check if the engine coolant reservoir cap is hot with your hand.\n\nHow is the temperature of the reservoir cap?\n1. Cool\n2. Warm\n3. Hot",
     2.111: "Let it cool down for another 10 mins and recheck. \n\nHow is the temperature of the reservoir cap?\n1. Cool\n2. Warm\n3. Hot",
-    2.112: "Good, we can work with that. Please try and undo the coolant cap. \n\nNOTE: If you feel pressure under the cap, please tighten it back and wait for another 5-10 minutes before undoing the cap.\n\nSelect one of the two options: \n1. Proceed\n2. This is tiring Stewie, get me professional help!",
+    2.112: "Good, we can work with that. Please try and undo the coolant cap. \n\nNOTE: If you feel pressure under the cap, please tighten it back and wait for another 5-10 minutes before undoing the cap.\n\nSelect one of the two options: \n1. Proceed\n2. I don't know Stewie, I think I need professional help!",
     2.1121: "Is the coolant level low? \n1. Yes\n2. No",
     2.11211: "Fill it up with water until maximum and refill your coolant at the earliest. \nDo you need anymore help? \n1. Yes \n2. No"
 }
@@ -65,17 +65,35 @@ app.post('/stewie', (request, response) => {
     }
     else if (message == messageStates[1])
     {
-        message = messageStates[2]
-        users[request.body.From] = messageStates[2]
-        response.send(
-            `
-            <Response>
-                <Message>
-                ${message}
-                </Message>
-            </Response>
-            `
-        )
+        if (body.includes("yes") || body.includes("yeah") || body.includes("ye"))
+        {
+            message = messageStates[2]
+            users[request.body.From] = messageStates[2]
+            response.send(
+                `
+                <Response>
+                    <Message>
+                    ${message}
+                    </Message>
+                </Response>
+                `
+            )
+        }
+        else
+        {
+            message = messageStates[0]
+            users[request.body.From] = messageStates[0]
+            response.send(
+                `
+                <Response>
+                    <Message>
+                    Great. You are good to get back on the road!
+                    </Message>
+                </Response>
+                `
+            )
+        }
+        
     }
     else if (message == messageStates[2])
     {
