@@ -1,7 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
+const dotenv = require('dotenv').config();
 
+const twilio = require('twilio')(process.env.ACCOUNT_SID,process.env.AUTH_TOKEN)
 const app = express();
 app.use(bodyParser.urlencoded({extended:true}));
 
@@ -11,12 +13,12 @@ app.get('/', (request, response) => {
 
 const messageStates = {
     0: "",
-    1: "Hi there! I'm Stewie, your friendly neighbourhood chatbot. Having car troubles?",
-    2: "Before we begin, bring the car to a stop. Make sure it is stationary.\n\nPlease select the option that you're having trouble with: \n1. Overheating\n2. Engine misfire(unusual rhythm)\n3. Vibration\n4. Electronic trouble\n5. I don't know Stewie, connect me to a professional!",
-    2.1: "Hmm, alright. I am searching my resources to find you a professional. In the meanwhile, I will help you run a basic analogy to provide you better help.\n\n Turn off the engine and let the car cool down for around 10-15 minutes.\n\nLooking at the gauges, what are you having trouble with?\n1. Engine temperature\n2. Transmission temperature",
-    2.11: "After you’ve allowed the car to cool down,\n1. pull up the bonnet cautiously \n2. check if the engine coolant reservoir cap is hot with your hand.\n\nHow is the temperature of the reservoir cap?\n1. Cool\n2. Warm\n3. Hot",
-    2.111: "Let it cool down for another 10 mins and recheck. \n\nHow is the temperature of the reservoir cap?\n1. Cool\n2. Warm\n3. Hot",
-    2.112: "Good, we can work with that. Please try and undo the coolant cap. \n\nNOTE: If you feel pressure under the cap, please tighten it back and wait for another 5-10 minutes before undoing the cap.\n\nSelect one of the two options: \n1. Proceed\n2. I don't know Stewie, I think I need professional help!",
+    1: "Hi there! I'm *Stewie*, your friendly neighbourhood chatbot. Having car troubles?",
+    2: "Before we begin, bring the car to a stop. *Make sure it is stationary*.\n\nPlease select the option that you're having trouble with: \n1. Overheating\n2. Engine misfire(unusual rhythm)\n3. Vibration\n4. Electronic trouble\n5. I don't know Stewie, connect me to a professional!",
+    2.1: "Hmm, alright. I am searching my resources to find you a professional. In the meanwhile, I will help you run a basic analogy to provide you better help.\n\n Turn off the engine and let the car cool down for around *10-15 minutes*.\n\nLooking at the gauges, what are you having trouble with?\n1. Engine temperature\n2. Transmission temperature",
+    2.11: "After you’ve allowed the car to cool down,\n1. pull up the *bonnet* cautiously \n2. check if the *engine coolant reservoir cap* is hot with your hand.\n\nHow is the temperature of the reservoir cap?\n1. Cool\n2. Warm\n3. Hot",
+    2.111: "Let it cool down for another *10 mins* and recheck. \n\nHow is the temperature of the reservoir cap?\n1. Cool\n2. Warm\n3. Hot",
+    2.112: "Good, we can work with that. Please try and undo the coolant cap. \n\nNOTE: If you feel *pressure under the cap*, please tighten it back and wait for another *5-10 minutes* before undoing the cap.\n\nSelect one of the two options: \n1. Proceed\n2. I don't know Stewie, I think I need professional help!",
     2.1121: "Is the coolant level low? \n1. Yes\n2. No",
     2.11211: "Fill it up with water until maximum and refill your coolant at the earliest. \nDo you need anymore help? \n1. Yes \n2. No"
 }
@@ -31,7 +33,6 @@ let message;//Also keeps track of chat state.
 
 app.post('/stewie', (request, response) => {
 
-    console.log(request.body);
     if (users[request.body.From] == null) 
     {
         users[request.body.From] = messageStates[0];
@@ -43,7 +44,7 @@ app.post('/stewie', (request, response) => {
 
     setTimeout(() => {
         users[request.body.From] = messageStates[0]
-    }, 60000)
+    }, 1000 * 60 * 5)
 
     response.type('xml');
 
@@ -87,7 +88,7 @@ app.post('/stewie', (request, response) => {
                 `
                 <Response>
                     <Message>
-                    Great. You are good to get back on the road!
+                    Great. You are good to get back on the road! \n\nDrive safe!
                     </Message>
                 </Response>
                 `
@@ -119,11 +120,21 @@ app.post('/stewie', (request, response) => {
                 `
                 <Response>
                     <Message>
-                    Contact our professional mechanic: ${professionalNumbers[1]}
+                    Our professional mechanic will get in touch with you soon. \n Here's their number: ${professionalNumbers[1]}
                     </Message>
                 </Response>
                 `
             )
+            twilio.calls.create({
+                to: "",
+                from: process.env.TWILIO_NUM,
+                twiml: 
+                `
+                <Response>
+                    <Say>We will connect you to an available mechanic</Say>
+                </Response>
+                `
+            })
         }
         else
         {
@@ -229,11 +240,21 @@ ${message.substring(71)}
                 `
                 <Response>
                     <Message>
-                    Contact our professional mechanic: ${professionalNumbers[1]}
+                    Our professional mechanic will get in touch with you soon. \n Here's their number: ${professionalNumbers[1]}
                     </Message>
                 </Response>
                 `
             )
+            twilio.calls.create({
+                to: "",
+                from: process.env.TWILIO_NUM,
+                twiml: 
+                `
+                <Response>
+                    <Say>We will connect you to an available mechanic</Say>
+                </Response>
+                `
+            })
         }
     }
     else if (message == messageStates[2.1121])
@@ -259,7 +280,7 @@ ${message.substring(71)}
                 `
                 <Response>
                     <Message>
-                    Great. You are good to get back on the road!
+                    Great. You are good to get back on the road! \n\nDrive safe!
                     </Message>
                 </Response>
                 `
@@ -277,11 +298,22 @@ ${message.substring(71)}
                 `
                 <Response>
                     <Message>
-                    Contact our professional mechanic: ${professionalNumbers[1]}
+                    Our professional mechanic will get in touch with you soon. \n Here's their number: ${professionalNumbers[1]}
                     </Message>
                 </Response>
                 `
             )
+            twilio.calls.create({
+                to: "",
+                from: process.env.TWILIO_NUM,
+                twiml: 
+                `
+                <Response>
+                    <Say>We will connect you to an available mechanic</Say>
+                </Response>
+                `
+            })
+
         }
         else 
         {
@@ -291,7 +323,7 @@ ${message.substring(71)}
                 `
                 <Response>
                     <Message>
-                    Great. You are good to get back on the road!
+                    Great. You are good to get back on the road! \n\nDrive Safe!
                     </Message>
                 </Response>
                 `
